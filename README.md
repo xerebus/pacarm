@@ -18,4 +18,4 @@ Disclaimers
 
 1. This script is quickly written, inefficient, and probably unsafe. Use at your own risk.
 2. It depends heavily on searching output (lots of `grep`ing and `cut`ing), so if `pacman` or `armh` change the way their output is formatted, this script will break.
-3. This allows you to install *outdated* packages. *DO NOT* report bugs if you use `pacarm`.
+3. This allows you to install *outdated* packages. *DO NOT* report bugs for packages if you use `pacarm` as the versions of the packages you're using will probably be unsupported.
