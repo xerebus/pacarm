@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# package name
+if [ $1 == "-S" ]; then
+	PAC=$2
+else
+	PAC=$1
+fi
+
+# directory to use for files and packages
+TMPDIR=/var/cache/pacarm
+
+# define and create subdirectory for current transaction
+TRANSDIR=$TMPDIR/$(date +%s)
+mkdir $TRANSDIR
+
+
+# run pacman for the package, collect output, and get 404 list
+pacman -S --noconfirm $PAC > $TRANSDIR/pacout.txt 2>&1
+cat $TRANSDIR/pacout.txt
+echo ":: Searching for 404 errors..."
+cat $TRANSDIR/pacout.txt | grep "404 Not Found" | cut -d"'" -f2 | uniq > $TRANSDIR/404.txt
+echo ":: Will search ARM for the following packages:"
+cat $TRANSDIR/404.txt
+
+# read 404 list and get ARM url for each package
+while read ARMPAC; do
+	ARMPACSH=$(echo $ARMPAC | cut -d"-" -f1)
+	armh --search $ARMPACSH | grep $ARMPAC | cut -d" " -f5 | grep -v ".sig" >> $TRANSDIR/urls.txt
+done < $TRANSDIR/404.txt
+
+# read ARM urls list and download each package to $TRANSDIR
+while read URL; do
+	wget -P $TRANSDIR $URL
+done < $TRANSDIR/urls.txt
+
+# install everything in $TRANSDIR
+echo ":: Installing packages..."
+for file in $TRANSDIR/*.pkg.tar.xz; do
+	pacman -U $file
+done
